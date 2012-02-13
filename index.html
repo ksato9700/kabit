@@ -16,6 +16,13 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/coffee-script.js"></script>
     <script type="text/coffeescript" src="src/kabit.coffee"></script>
+    <script>
+      var attr_names = ['geolocation', 'battery', 'contacts'], i=0 ;
+      for (;i<attr_names.length; i++) {
+        var attr_name = attr_names[i]
+        console.log (attr_name , navigator[attr_name]);
+      }
+    </script>
   </head>
   <body>
   </body>

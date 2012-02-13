@@ -1,4 +1,4 @@
-socket = io.connect 'http://localhost:8080'
+socket = io.connect 'http://192.168.2.4:8080'
 
 console.log navigator.battery
 
