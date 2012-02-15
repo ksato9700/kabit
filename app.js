@@ -25,7 +25,7 @@
     });
   });
 
-  port = 8554;
+  port = process.env.PORT || 3000;
 
   app.listen(port, function() {
     return console.log("Listening on " + port);
