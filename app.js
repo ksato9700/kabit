@@ -9,6 +9,10 @@
 
   app.use(express.static(__dirname));
 
+  app.configure(function() {
+    return app.set('views', __dirname + '/views');
+  });
+
   app.get('/controller', function(req, res) {
     return res.render("controller.ejs", {
       host_url: "http://" + req.headers.host

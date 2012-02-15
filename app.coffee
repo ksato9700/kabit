@@ -4,6 +4,9 @@ socketio = require 'socket.io'
 app = express.createServer express.logger()
 app.use express.static __dirname
 
+app.configure ->
+  app.set 'views', __dirname + '/views'
+
 app.get '/controller', (req, res)->
   res.render "controller.ejs"
     host_url: "http://" + req.headers.host
