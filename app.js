@@ -25,7 +25,7 @@
     });
   });
 
-  port = 8080;
+  port = 8554;
 
   app.listen(port, function() {
     return console.log("Listening on " + port);

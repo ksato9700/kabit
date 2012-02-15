@@ -15,7 +15,7 @@ app.get '/display', (req, res)->
   res.render "display.ejs"
     host_url: "http://" + req.headers.host
 
-port = 8080
+port = 8554
 app.listen port, ->
   console.log "Listening on " + port
 
