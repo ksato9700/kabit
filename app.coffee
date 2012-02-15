@@ -15,9 +15,9 @@ app.get '/display', (req, res)->
   res.render "display.ejs"
     host_url: "http://" + req.headers.host
 
-port = 8554
+port = process.env.PORT || 3000
 app.listen port, ->
-  console.log "Listening on " + port
+  console.log "Listening on #{port}"
 
 io = socketio.listen app
 
