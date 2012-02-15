@@ -8,14 +8,23 @@ app.get '/controller', (req, res)->
   res.render "controller.ejs"
     host_url: "http://" + req.headers.host
 
+app.get '/display', (req, res)->
+  res.render "display.ejs"
+    host_url: "http://" + req.headers.host
+
 port = 8080
 app.listen port, ->
   console.log "Listening on " + port
 
 io = socketio.listen app
 
+display_socket = null
+
 io.sockets.on 'connection', (socket)->
   socket.emit 'ready'
+
+  socket.on 'display', ->
+    display_socket = socket
 
   socket.on 'location', (data)->
     console.log "LOCATION-->", data
@@ -24,5 +33,5 @@ io.sockets.on 'connection', (socket)->
     console.log "BATTERY-->", data
 
   socket.on 'deviceorientation', (data)->
-    console.log "DEVICE ORIENTATION-->", data
+    display_socket.emit 'deviceorientation', data
 
