@@ -24,10 +24,11 @@ class KController
     @socket.on 'ready', =>
       @display = 0 # tentative
       @socket.emit 'device'
-      @sense_location()
+      # @sense_location()
       # @sense_battery()
 
       @orientation = [0, 0, 0]
+      @calibration()
       @sense_orientation()
 
   sense_location: ->
@@ -60,6 +61,13 @@ class KController
       if not didnt_change
         @socket.emit 'deviceorientation', orientation
         @orientation = orientation
+
+  calibration: ->
+    addEventListener 'compassneedscalibration', (event)->
+          console.log 'Your compass needs calibrating! Wave your device in a figure-eight motion'
+          event.preventDefault()
+      , true
+
 
 kc = new KController window.host_url
 kc.sense()
