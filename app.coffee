@@ -21,20 +21,20 @@ app.listen port, ->
 
 io = socketio.listen app
 
-display_socket = null
+display_sockets = []
 
 io.sockets.on 'connection', (socket)->
   socket.emit 'ready'
 
   socket.on 'display', ->
-    display_socket = socket
+    display_sockets.push socket
 
-  socket.on 'location', (data)->
-    console.log "LOCATION-->", data
+  socket.on 'device', (display) ->
+    socket.on 'location', (data)->
+      #console.log "LOCATION-->", data
 
-  socket.on 'battery', (data)->
-    console.log "BATTERY-->", data
+    socket.on 'battery', (data)->
+      #console.log "BATTERY-->", data
 
-  socket.on 'deviceorientation', (data)->
-    display_socket.emit 'deviceorientation', data
-
+    socket.on 'deviceorientation', (data)->
+      ds.emit 'deviceorientation', socket.id, data for ds in display_sockets

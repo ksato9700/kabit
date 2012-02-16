@@ -22,6 +22,8 @@ class KController
 
   sense: ->
     @socket.on 'ready', =>
+      @display = 0 # tentative
+      @socket.emit 'device'
       @sense_location()
       # @sense_battery()
 
