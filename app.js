@@ -1,5 +1,5 @@
 (function() {
-  var app, display_socket, express, io, port, socketio;
+  var app, display_sockets, express, io, port, socketio;
 
   express = require('express');
 
@@ -33,21 +33,25 @@
 
   io = socketio.listen(app);
 
-  display_socket = null;
+  display_sockets = [];
 
   io.sockets.on('connection', function(socket) {
     socket.emit('ready');
     socket.on('display', function() {
-      return display_socket = socket;
+      return display_sockets.push(socket);
     });
-    socket.on('location', function(data) {
-      return console.log("LOCATION-->", data);
-    });
-    socket.on('battery', function(data) {
-      return console.log("BATTERY-->", data);
-    });
-    return socket.on('deviceorientation', function(data) {
-      return display_socket.emit('deviceorientation', data);
+    return socket.on('device', function(display) {
+      socket.on('location', function(data) {});
+      socket.on('battery', function(data) {});
+      return socket.on('deviceorientation', function(data) {
+        var ds, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = display_sockets.length; _i < _len; _i++) {
+          ds = display_sockets[_i];
+          _results.push(ds.emit('deviceorientation', socket.id, data));
+        }
+        return _results;
+      });
     });
   });
 
