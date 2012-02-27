@@ -38,3 +38,12 @@ io.sockets.on 'connection', (socket)->
 
     socket.on 'deviceorientation', (data)->
       ds.emit 'deviceorientation', socket.id, data for ds in display_sockets
+
+    socket.on 'touchstart', (data)->
+      ds.emit 'touchstart', socket.id, data for ds in display_sockets
+
+    socket.on 'touchmove', (data)->
+      ds.emit 'touchmove', socket.id, data for ds in display_sockets
+
+    socket.on 'touchend', (data)->
+      ds.emit 'touchend', socket.id, data for ds in display_sockets

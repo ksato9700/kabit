@@ -27,9 +27,14 @@ class KController
       # @sense_location()
       # @sense_battery()
 
+      @sense_touch()
+
       @orientation = [0, 0, 0]
       @calibration()
       @sense_orientation()
+
+      @height = window.innerHeight
+      @width  = window.innerWidth
 
   sense_location: ->
     watchId = navigator.geolocation.watchPosition (position)=>
@@ -54,6 +59,25 @@ class KController
       level:           navigator.battery.level
       dischargingTime: navigator.battery.dischargingTime
 
+  send_touch: (type, event)->
+    touch = event.touches[0] # use only the first data
+    if touch
+      data = [touch.screenX/@width, touch.screenY/@height]
+    else
+      data = null
+    @socket.emit type, data
+    event.preventDefault()
+
+  sense_touch: ->
+    addEventListener 'touchstart', (event)=>
+      @send_touch 'touchstart', event
+
+    addEventListener 'touchmove', (event)=>
+      @send_touch 'touchmove', event
+
+    addEventListener 'touchend', (event)=>
+      @send_touch 'touchend', event
+
   sense_orientation: ->
     addEventListener 'deviceorientation', (event)=>
       orientation = (Math.round val for val in [event.alpha, event.beta, event.gamma])
@@ -70,4 +94,5 @@ class KController
 
 
 kc = new KController window.host_url
+console.log kc
 kc.sense()

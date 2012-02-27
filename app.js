@@ -43,12 +43,39 @@
     return socket.on('device', function(display) {
       socket.on('location', function(data) {});
       socket.on('battery', function(data) {});
-      return socket.on('deviceorientation', function(data) {
+      socket.on('deviceorientation', function(data) {
         var ds, _i, _len, _results;
         _results = [];
         for (_i = 0, _len = display_sockets.length; _i < _len; _i++) {
           ds = display_sockets[_i];
           _results.push(ds.emit('deviceorientation', socket.id, data));
+        }
+        return _results;
+      });
+      socket.on('touchstart', function(data) {
+        var ds, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = display_sockets.length; _i < _len; _i++) {
+          ds = display_sockets[_i];
+          _results.push(ds.emit('touchstart', socket.id, data));
+        }
+        return _results;
+      });
+      socket.on('touchmove', function(data) {
+        var ds, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = display_sockets.length; _i < _len; _i++) {
+          ds = display_sockets[_i];
+          _results.push(ds.emit('touchmove', socket.id, data));
+        }
+        return _results;
+      });
+      return socket.on('touchend', function(data) {
+        var ds, _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = display_sockets.length; _i < _len; _i++) {
+          ds = display_sockets[_i];
+          _results.push(ds.emit('touchend', socket.id, data));
         }
         return _results;
       });
