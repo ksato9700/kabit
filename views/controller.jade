@@ -1,0 +1,13 @@
+extends layout
+
+block extra_header
+  script(src="/js/coffee-script.js")
+  script(src="/js/kcontroller.coffee", type="text/coffeescript")
+
+block content
+  h1= "Controller Mode"
+  script(type="text/javascript")
+    window.onload = function(){
+      window.host_url = "#{host_url}";
+    };
+

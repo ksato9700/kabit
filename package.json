@@ -1,8 +1,12 @@
 {
 	"name": "kabit",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"dependencies": {
-	  "express": ">= 2.5.7",
+	  "express": "3.x",
+	  "jade": "*",
 	  "socket.io": "*"
+        },
+        "devDependencies": {
+          "coffee-script": "*"
 	}
 }

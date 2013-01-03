@@ -5,25 +5,24 @@
 #
 # utilities
 #
-compare_array = (a,b)->
-  if a.length isnt b.length
-    return false
-  for i in [0...a.length]
-    if a[i] isnt b[i]
-      return false
-  return true
+compare_orientation = (a,b)->
+  return a[0] is b[0] and a[1] is b[1] and a[2] is b[2]
+
+round_and_pack_orientation = (event, th)->
+  new Int16Array((((Math.round val/th)*th) for val in [event.alpha, event.beta, event.gamma]))
 
 #
 # class
 #
 class KController
   constructor: (host_url)->
-    @socket = io.connect host_url
+    console.log host_url
+    @server = io.connect host_url
 
   sense: ->
-    @socket.on 'ready', =>
-      @display = 0 # tentative
-      @socket.emit 'device'
+    @server.on 'connected', =>
+      console.log 'connected'
+      @server.emit 'join', {type: 'controllers'}
       # @sense_location()
       # @sense_battery()
 
@@ -38,7 +37,7 @@ class KController
 
   sense_location: ->
     watchId = navigator.geolocation.watchPosition (position)=>
-      @socket.emit 'location',
+      @server.emit 'location',
         timestamp: position.timtstamp
         latitude:  position.coords.latitude
         longitude: position.coords.longitude
@@ -48,12 +47,12 @@ class KController
         heading:   position.coords.heading
         speed:     position.coords.speed
 
-    @socket.on 'disconnect', ->
+    @server.on 'disconnect', ->
       navigator.geolocation.clearWatch watchId
 
   sense_battery: ->
     battery = navigator.battery || navigator.mozBattery || navigator.webkitBattery
-    @socket.emit 'battery',
+    @server.emit 'battery',
       charging:        navigator.battery.charging
       chargingTime:    navigator.battery.chargingTime
       level:           navigator.battery.level
@@ -65,7 +64,7 @@ class KController
       data = [touch.screenX/@width, touch.screenY/@height]
     else
       data = null
-    @socket.emit type, data
+    @server.emit type, data
     event.preventDefault()
 
   sense_touch: ->
@@ -80,10 +79,11 @@ class KController
 
   sense_orientation: ->
     addEventListener 'deviceorientation', (event)=>
-      orientation = (Math.round val for val in [event.alpha, event.beta, event.gamma])
-      didnt_change = compare_array orientation, @orientation
+      orientation = round_and_pack_orientation(event, 3)
+      didnt_change = compare_orientation orientation, @orientation
       if not didnt_change
-        @socket.emit 'deviceorientation', orientation
+        #console.log orientation
+        @server.emit 'deviceorientation', orientation
         @orientation = orientation
 
   calibration: ->

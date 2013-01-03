@@ -1,5 +1,5 @@
 #
-# Copyright 2012 Kenichi Sato <ksato9700@gmail.com>
+# Copyright 2012, 2013 Kenichi Sato <ksato9700@gmail.com>
 #
 
 generate_sprite = ->
@@ -21,80 +21,93 @@ generate_sprite = ->
   context.fillRect 0, 0, canvas.width, canvas.height
   return canvas
 
-
+new_color = ->
+  Math.random()*0xffffff  
 
 #
 # class
 #
 class KDisplay
   constructor: (host_url)->
-    @socket = io.connect host_url
+    @server = io.connect host_url
     @cubes = []
     @particles = []
     @devices = []
 
   display: ->
-    @socket.on 'ready', =>
-      @socket.emit 'display'
+    @server.on 'connected', =>
+      @server.emit 'join', {type: 'displays'}
+
       @display_orientation()
       @display_touch()
 
       @three_init()
-      timer = setInterval =>
+      
+      setInterval =>
         @three_render()
-      , 16
-
-      @socket.on 'id', (id)=>
-        @id = id
+      , 32
 
   three_init: ->
     container = $ '#container'
     @scene = new THREE.Scene()
 
     # camera
-    @camera = new THREE.PerspectiveCamera 90, window.innerWidth / window.innerHeight, 120, 10000
+    @camera = new THREE.PerspectiveCamera 70, window.innerWidth/window.innerHeight, 1, 1000
     @camera.position.y = 250
     @camera.position.z = 750
-    @scene.add @camera
 
-    @renderer = new THREE.CanvasRenderer()
+    @lookat = new THREE.Vector3()
+
+    # renderer
+    # @renderer = new CanvasRenderer()
+    @renderer = new THREE.WebGLRenderer()
     @renderer.setSize window.innerWidth, window.innerHeight
     container.append @renderer.domElement
 
-    @create_cubes idx for idx in [0...4]
-
-  create_cubes: (idx) ->
-    # cube
-    materials = (new THREE.MeshBasicMaterial { color: Math.random() * 0xffffff } for i in [0...6])
-
-    position_x = -720 + 480*idx
-
-    cube_geometory = new THREE.CubeGeometry 240, 20, 320, 1, 1, 1, materials
-    cube_face = new THREE.MeshFaceMaterial()
-    cube = new THREE.Mesh cube_geometory, cube_face
-    cube.position.x = position_x
-    cube.position.y = 150
-    cube.rotation.set 1, 0, 0
-    cube.overdraw = true
-    @scene.add cube
-    @cubes.push cube
-
-    # particle
-    material = new THREE.ParticleBasicMaterial
-      map: new THREE.Texture generate_sprite()
-      blending: THREE.AdditiveBlending
-
-    particle = new THREE.Particle material
-    particle.scale.multiplyScalar 10
-    particle.visible = false
-
-    cube.add particle
-
-    # @scene.add particle
-    @particles.push particle
+    # cubes
+    @cubes = (@create_cube idx for idx in [0...4])
 
   three_render: ->
     @renderer.render @scene, @camera
+    for cube in @cubes
+      cube.rotation.x += 0.01
+      cube.rotation.y -= 0.00
+
+    # @lookat.addSelf new THREE.Vector3 0,0,3
+    # console.log @lookat
+    # @camera.lookAt @lookat
+
+  create_cube: (idx) ->
+    #materials = (new THREE.MeshBasicMaterial {color: new_color() } for i in [0...6])
+    #material = new THREE.MeshFaceMaterial materials
+
+    material = new THREE.MeshBasicMaterial
+      color: new_color()
+      opacity: 1.0
+
+    cube_geometory = new THREE.CubeGeometry 240, 20, 320, 1, 1, 1
+    cube = new THREE.Mesh cube_geometory, material
+
+    #cube.position.x = -720 + 480*idx
+    cube.position.x = 30*idx
+    cube.position.y = 30*idx
+    cube.rotation.set 1, 0, 0
+    @scene.add cube
+    return cube
+
+    # particle
+    # material = new THREE.ParticleBasicMaterial
+    #   map: new THREE.Texture generate_sprite()
+    #   blending: THREE.AdditiveBlending
+
+    # particle = new THREE.Particle material
+    # particle.scale.multiplyScalar 10
+    # particle.visible = false
+
+    # cube.add particle
+
+    # @scene.add particle
+    # @particles.push particle
 
   get_idx: (id)->
     idx = @devices.indexOf id
@@ -106,15 +119,15 @@ class KDisplay
     idx
 
   display_orientation: ->
-    @socket.on 'deviceorientation', (id, data)=>
-      idx = @get_idx id
-      rx = (parseInt data[1])/57.3
-      ry = (parseInt data[0])/57.3
-      rz = -(parseInt data[2])/57.3
-      @cubes[idx].rotation.set rx, ry, rz
-      @cubes[idx].updateMatrixWorld true
-
+    @server.on 'deviceorientation', (id, data)=>
       # console.log "DEVICE_ORIENTATION-->", id, data
+      idx = @get_idx id
+      [ry,rx,rz] = ( val*Math.PI / 180 for val in data)
+      rz = - rz
+      #console.log idx, rx,ry,rz
+      @cube.rotation.set rx, ry, rz
+      #@cubes[idx].rotation.set rx, ry, rz
+    #@cubes[idx].updateMatrixWorld true
 
   touch_action: (id, data, visible)->
       idx = @get_idx id
@@ -129,13 +142,13 @@ class KDisplay
 
 
   display_touch: (idx)->
-    @socket.on 'touchstart', (id, data)=>
+    @server.on 'touchstart', (id, data)=>
       @touch_action id, data, true
 
-    @socket.on 'touchmove', (id, data)=>
+    @server.on 'touchmove', (id, data)=>
       @touch_action id, data, true
 
-    @socket.on 'touchend', (id, data)=>
+    @server.on 'touchend', (id, data)=>
       @touch_action id, data, false
 
 kd = new KDisplay window.host_url

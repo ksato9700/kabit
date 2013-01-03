@@ -1,49 +1,55 @@
+#
+# Copyright 2012 Kenichi Sato <ksato9700@gmail.com>
+# 
 express = require 'express'
 socketio = require 'socket.io'
 
-app = express.createServer express.logger()
-app.use express.static __dirname
+routes = require './routes'
+
+app = express()
 
 app.configure ->
+  app.set 'port', process.env.PORT || 3000
   app.set 'views', __dirname + '/views'
+  app.set 'view engine', 'jade'
+  app.use express.favicon()
+  app.use express.logger 'dev'
+  app.use express.bodyParser()
+  app.use express.methodOverride()
+  app.use app.router
+  app.use express.static __dirname + '/public'
 
-app.get '/controller', (req, res)->
-  res.render "controller.ejs"
-    host_url: "http://" + req.headers.host
-
-app.get '/display', (req, res)->
-  res.render "display.ejs"
-    host_url: "http://" + req.headers.host
+app.get '/', routes.index
+app.get '/:type', routes.type
 
 port = process.env.PORT || 3000
-app.listen port, ->
+server = app.listen port, ->
   console.log "Listening on #{port}"
 
-io = socketio.listen app
+io = socketio.listen server
 
-display_sockets = []
+server = io.sockets.on 'connection', (client)->
+  server.emit 'connected'
+  client.on 'join', (req)->
+    client.join req.type
+    console.log 'joined type:', req.type
+    server.to(req.type).emit 'hello', 'all'
+    
+  #   server.on 'location', (data)->
+  #     #console.log "LOCATION-->", data
 
-io.sockets.on 'connection', (socket)->
-  socket.emit 'ready'
+  #   server.on 'battery', (data)->
+  #     #console.log "BATTERY-->", data
 
-  socket.on 'display', ->
-    display_sockets.push socket
+  client.on 'deviceorientation', (data)->
+    console.log data
+    server.to('displays').emit 'deviceorientation', client.id, data
 
-  socket.on 'device', (display) ->
-    socket.on 'location', (data)->
-      #console.log "LOCATION-->", data
+  #   server.on 'touchstart', (data)->
+  #     ds.emit 'touchstart', server.id, data for ds in display_servers
 
-    socket.on 'battery', (data)->
-      #console.log "BATTERY-->", data
+  #   server.on 'touchmove', (data)->
+  #     ds.emit 'touchmove', server.id, data for ds in display_servers
 
-    socket.on 'deviceorientation', (data)->
-      ds.emit 'deviceorientation', socket.id, data for ds in display_sockets
-
-    socket.on 'touchstart', (data)->
-      ds.emit 'touchstart', socket.id, data for ds in display_sockets
-
-    socket.on 'touchmove', (data)->
-      ds.emit 'touchmove', socket.id, data for ds in display_sockets
-
-    socket.on 'touchend', (data)->
-      ds.emit 'touchend', socket.id, data for ds in display_sockets
+  #   server.on 'touchend', (data)->
+  #     ds.emit 'touchend', server.id, data for ds in display_servers

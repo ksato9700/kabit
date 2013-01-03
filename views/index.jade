@@ -1,0 +1,8 @@
+extends layout
+
+block content
+  for type in ["display", "controller"]
+    h1
+      a(href="./#{type}") #{type}
+
+  
