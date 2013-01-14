@@ -24,7 +24,7 @@ class KController
       console.log 'connected'
       @server.emit 'join', {type: 'controllers'}
       # @sense_location()
-      # @sense_battery()
+      @sense_battery()
 
       @sense_touch()
 
@@ -50,13 +50,24 @@ class KController
     @server.on 'disconnect', ->
       navigator.geolocation.clearWatch watchId
 
+  send_battery: (event)->
+    console.log event.type
+
+    battery_info = 
+      charging:        event.target.charging
+      chargingTime:    event.target.chargingTime
+      level:           event.target.level
+      dischargingTime: event.target.dischargingTime
+
+    #console.log battery_info
+    @server.emit 'battery', battery_info
+
   sense_battery: ->
     battery = navigator.battery || navigator.mozBattery || navigator.webkitBattery
-    @server.emit 'battery',
-      charging:        navigator.battery.charging
-      chargingTime:    navigator.battery.chargingTime
-      level:           navigator.battery.level
-      dischargingTime: navigator.battery.dischargingTime
+    for eventype in ['chargingchange', 'chargingtimechange',
+                     'dischargingtimechange', 'levelchange']
+      battery.addEventListener eventype, (event)=>
+        @send_battery event
 
   send_touch: (type, event)->
     touch = event.touches[0] # use only the first data
@@ -88,11 +99,10 @@ class KController
 
   calibration: ->
     addEventListener 'compassneedscalibration', (event)->
-          console.log 'Your compass needs calibrating! Wave your device in a figure-eight motion'
-          event.preventDefault()
-      , true
-
+      console.log 'Your compass needs calibrating! Wave your device in a figure-eight motion'
+      event.preventDefault()
+    , true
 
 kc = new KController window.host_url
-console.log kc
+#console.log kc
 kc.sense()

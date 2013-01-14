@@ -38,11 +38,12 @@ server = io.sockets.on 'connection', (client)->
   #   server.on 'location', (data)->
   #     #console.log "LOCATION-->", data
 
-  #   server.on 'battery', (data)->
-  #     #console.log "BATTERY-->", data
+  client.on 'battery', (data)->
+    console.log "BATTERY-->", data
+    server.to('displays').emit 'battery', client.id, data
 
   client.on 'deviceorientation', (data)->
-    console.log data
+    # console.log data
     server.to('displays').emit 'deviceorientation', client.id, data
 
   #   server.on 'touchstart', (data)->
