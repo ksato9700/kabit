@@ -2,6 +2,8 @@
 # Copyright 2012, 2013 Kenichi Sato <ksato9700@gmail.com>
 #
 
+MAX_DEVICES = 4
+
 generate_sprite = ->
   canvas = document.createElement 'canvas'
   canvas.width = 16
@@ -40,6 +42,7 @@ class KDisplay
 
       @display_orientation()
       @display_touch()
+      @display_battery()
 
       @three_init()
       
@@ -65,7 +68,7 @@ class KDisplay
     container.append @renderer.domElement
 
     # cubes
-    @cubes = (@create_cube idx for idx in [0...4])
+    @cubes = (@create_cube idx for idx in [0...MAX_DEVICES])
 
   three_render: ->
     @renderer.render @scene, @camera
@@ -112,7 +115,7 @@ class KDisplay
   get_idx: (id)->
     idx = @devices.indexOf id
     if idx < 0
-      if @devices.length >= 4
+      if @devices.length >= MAX_DEVICES
         @devices.shift()
       @devices.push id
       idx = @devices.length-1
@@ -140,6 +143,12 @@ class KDisplay
       else
         @particles[idx].visible = false
 
+  display_battery: ->
+    @server.on 'battery', (id, data)=>
+      console.log id, data
+      idx = @get_idx id
+      for type, value of data
+        $("##{type}-#{idx}").text(value)
 
   display_touch: (idx)->
     @server.on 'touchstart', (id, data)=>
